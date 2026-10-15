@@ -51,6 +51,8 @@ return [
     */
 
     'expiration' => null,
+    'auth_token_expiration' => env('AUTH_TOKEN_EXPIRATION', 30),
+    'refresh_token_expiration' => env('REFRESH_TOKEN_EXPIRATION', 432000), 
 
     /*
     |--------------------------------------------------------------------------
