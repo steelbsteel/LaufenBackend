@@ -55,13 +55,21 @@ final class AuthService
         });
     }
 
-    public function logout(User $user): void
+    public function logout(User $user, string $refreshToken): void
     {
-        $token = $user->currentAccessToken();
+        DB::transaction(function () use ($user, $refreshToken): void {
+            $accessToken = $user->currentAccessToken();
 
-        if ($token instanceof PersonalAccessToken) {
-            $token->delete();
-        }
+            if ($accessToken instanceof PersonalAccessToken) {
+                $accessToken->delete();
+            }
+
+            $refresh = PersonalAccessToken::findToken($refreshToken);
+
+            if ($refresh !== null && $refresh->can('refresh') && $refresh->tokenable?->is($user)) {
+                $refresh->delete();
+            }
+        });
     }
 
     private function issueTokens(User $user): AuthTokens
