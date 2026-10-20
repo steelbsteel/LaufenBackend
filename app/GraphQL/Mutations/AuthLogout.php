@@ -8,7 +8,7 @@ use App\Models\User;
 use App\Services\AuthService;
 use Nuwave\Lighthouse\Support\Contracts\GraphQLContext;
 
-final class Logout
+final class AuthLogout
 {
     public function __construct(private AuthService $auth) {}
 

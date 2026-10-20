@@ -56,3 +56,13 @@ If you discover a security vulnerability within Laravel, please send an e-mail t
 ## License
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+
+## Коды ошибок
+
+Ошибка для клиента приходит в `errors[].extensions`: `code` (число) и `name` (имя кейса `App\Exceptions\ErrorCode`).
+Клиент ветвится по `code`. Ошибки валидации (`validation`) и авторизации (`@guard`) — стандартные Lighthouse, своих кодов у них нет.
+
+| Код | Имя | Когда |
+|---|---|---|
+| 1001 | `INVALID_CREDENTIALS` | `authLogin`: неверный email или пароль |
+| 1002 | `REFRESH_TOKEN_INVALID` | `authTokenRefresh`: refresh-токен не найден, истёк или это не refresh-токен |

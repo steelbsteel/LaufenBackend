@@ -5,21 +5,29 @@ type User {
     createdAt: DateTime! @rename(attribute: "created_at")
 }
 
+"Пара токенов и пользователь, которому они выданы."
 type AuthPayload {
+    "Токен для запросов к защищённым полям. Передаётся в заголовке `Authorization: Bearer <token>`."
     accessToken: String!
+
+    "Токен для получения новой пары через `authTokenRefresh`. В защищённые поля не пускает."
     refreshToken: String!
+
     user: User!
 }
 
 extend type Query {
+    "Текущий пользователь."
     me: User! @guard @auth
 }
 
 extend type Mutation {
-    register(input: RegisterInput! @spread): AuthPayload!
+    "Регистрация. Сразу выдаёт пару токенов."
+    authRegister(input: RegisterInput! @spread): AuthPayload!
         @throttle(maxAttempts: 5, decayMinutes: 1)
-    
-    login(
+
+    "Вход по email и паролю."
+    authLogin(
         email: String!
             @rules(
                 apply: ["required", "email"]
@@ -32,24 +40,26 @@ extend type Mutation {
             @rules(
                 apply: ["required"]
                 messages: [
-                    {rule: "required", message: "Введите пароль"}
+                    { rule: "required", message: "Введите пароль" }
                 ]
             )
     ): AuthPayload! @throttle(maxAttempts: 5, decayMinutes: 1)
 
+    "Новая пара токенов по refresh-токену. Переданный refresh-токен после этого недействителен."
     authTokenRefresh(refreshToken: String!): AuthPayload!
 
-    logout(refreshToken: String!): Boolean! @guard
+    "Выход: удаляет текущий access-токен и переданный refresh-токен."
+    authLogout(refreshToken: String!): Boolean! @guard
 }
 
-input RegisterInput{
+input RegisterInput {
     name: String!
         @rules(
             apply: ["required", "string", "min:2", "max:50"]
             messages: [
-                { rule: "required", message: "Введите имя"}
-                { rule: "min", message: "Имя должно содержать минимум 2 символа"}
-                { rule: "max", message: "Имя должно содержать не более 50 символов"}
+                { rule: "required", message: "Введите имя" }
+                { rule: "min", message: "Имя должно содержать минимум 2 символа" }
+                { rule: "max", message: "Имя должно содержать не более 50 символов" }
             ]
         )
     email: String!
