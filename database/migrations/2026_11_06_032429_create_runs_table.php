@@ -17,7 +17,7 @@ return new class extends Migration
             $table->timestamp('started_at');
             $table->unsignedInteger('duration_sec');
             $table->unsignedInteger('distance_m');
-            $table->unsignedInteger('calories');
+            $table->unsignedInteger('calories')->nullable();
             $table->timestamps();
 
             $table->index(['user_id', 'started_at']);
