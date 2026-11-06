@@ -15,9 +15,32 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_USER: laufen
+          POSTGRES_PASSWORD: secret
+          POSTGRES_DB: laufen_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      env:
+        DB_CONNECTION: pgsql
+        DB_HOST: 127.0.0.1
+        DB_PORT: 5432
+        DB_DATABASE: laufen_test
+        DB_USERNAME: laufen
+        DB_PASSWORD: secret
+
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
     
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
@@ -32,4 +55,9 @@ jobs:
       - name: Prepare .env
         run: |
           cp .env.example .env
-          php artisan key:generate
+          php artisan key:generate    
+      
+      - name: Check database connection
+        run: |
+          php artisan migrate --force
+          php artisan db:show
