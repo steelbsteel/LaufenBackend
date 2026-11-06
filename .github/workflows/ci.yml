@@ -57,7 +57,11 @@ jobs:
           cp .env.example .env
           php artisan key:generate    
       
-      - name: Check database connection
-        run: |
-          php artisan migrate --force
-          php artisan db:show
+      - name: Code style (Pint)
+        run: vendor/bin/pint --test
+
+      - name: GraphQL schema
+        run: php artisan lighthouse:validate-schema
+
+      - name: Tests
+        run: php artisan test
