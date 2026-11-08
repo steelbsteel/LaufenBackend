@@ -1,0 +1,101 @@
+type Run {
+    id: ID!
+    "Начало пробежки, UTC."
+    startedAt: DateTime! @rename(attrubute: "started_at")
+    durationSec: Int! @rename(attrubute: "duration_sec")
+    distanceM: Int! @rename(attrubute: "distance_m")
+    "Средний темп в секундах на километр. null при нулевой дистанции."
+    avgPaceSecPerKm: Int! @rename(attrubute: "avg_pace_sec_per_km")
+    calories: Int
+    "Точки трека по порядку. Запрашивать только для одной пробежки, не в списке."
+    points: [RunPoint!]! @hasMany
+}
+
+type RunPoint {
+    id: ID!
+    lat: Float!
+    lng: Float!
+    recordedAt: DateTime! @rename(attrubute: "recorded_at")
+}
+
+enum RunPeriod {
+    WEEK
+    MONTH
+    YEAR
+}
+
+extend type Query {
+    runs(
+        period: RunPeriod @builder(method: "App\\GraphQL\\Builders\\RunPeriodFilter@apply")
+    ): [Run!]!
+        @guard
+        @whereAuth(relation: "user")
+        @orderBy(column: "started_at", direction: DESC)
+        @paginate(type: SIMPLE, defaultCount: 20, maxCount: 50)
+
+    "Пробежка текущего пользователя с треком. Нет или чужая — код 2001."
+    run(
+        id: ID! @rules(apply: ["integer", "min:1"])
+    ): Run! @guard
+}
+
+extend type Mutation {
+    "Сохранить пробежку с треком. Трек не совпадает по времени — код 2002."
+    runCreate(input: RunCreateInput! @spread): Run!
+        @guard
+        @throttle(maxAttempts: 30, decayMinutes: 1)
+
+    "Удалить свою пробежку вместе с треком. Нет или чужая — код 2001."
+    runDelete(
+        id: ID! @rules(apply: ["integer", "min:1"])
+    ): Boolean! @guard
+}
+
+input RunCreateInput {
+    startedAt: DateTime! @rename(attribute: "started_at")
+    durationSec: Int!
+        @rename(attribute: "duration_sec")
+        @rules(
+            apply: ["integer", "min:1", "max:86400"]
+            messages: [
+                { rule: "min", message: "Длительность должна быть больше нуля" }
+                { rule: "max", message: "Пробежка не может длиться больше суток" }
+            ]
+        )
+    distanceM: Int!
+        @rename(attribute: "distance_m")
+        @rules(
+            apply: ["integer", "min:0", "max:500000"]
+            messages: [
+                { rule: "min", message: "Дистанция не может быть отрицательной" }
+                { rule: "max", message: "Дистанция не может быть больше 500 км" }
+            ]
+        )
+    calories: Int
+        @rules(
+            apply: ["nullable", "integer", "min:0", "max:20000"]
+            messages: [{ rule: "min", message: "Калории не могут быть отрицательными" }]
+        )
+    points: [RunPointInput!]!
+        @rulesForArray(
+            apply: ["min:2", "max:20000"]
+            messages: [
+                { rule: "min", message: "В треке должно быть минимум 2 точки" }
+                { rule: "max", message: "В треке не может быть больше 20 000 точек" }
+            ]
+        )
+}
+
+input RunPointInput {
+    lat: Float!
+        @rules(
+            apply: ["between:-90,90"]
+            messages: [{ rule: "between", message: "Широта должна быть от -90 до 90" }]
+        )
+    lng: Float!
+        @rules(
+            apply: ["between:-180,180"]
+            messages: [{ rule: "between", message: "Долгота должна быть от -180 до 180" }]
+        )
+    recordedAt: DateTime! @rename(attribute: "recorded_at")
+}
