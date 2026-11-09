@@ -6,14 +6,14 @@ namespace App\GraphQL\Mutations;
 
 use App\Models\Run;
 use App\Models\User;
-use App\Services\RunsManager;
+use App\Services\RunsService;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Arr;
 use Nuwave\Lighthouse\Support\Contracts\GraphQLContext;
 
 final class RunCreate
 {
-    public function __construct(private RunsManager $runs) {}
+    public function __construct(private RunsService $runs) {}
 
     /**
      * @param array{

@@ -12,7 +12,7 @@ use App\Models\User;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Facades\DB;
 
-final class RunsManager
+final class RunsService
 {
     /** Допуск по времени точки относительно начала и конца пробежки. */
     private const TRACK_TIME_TOLERANCE_SEC = 60;
