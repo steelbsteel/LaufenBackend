@@ -1,21 +1,22 @@
+"Пробежка: итоги без трека. Трек — поле points."
 type Run {
     id: ID!
     "Начало пробежки, UTC."
-    startedAt: DateTime! @rename(attrubute: "started_at")
-    durationSec: Int! @rename(attrubute: "duration_sec")
-    distanceM: Int! @rename(attrubute: "distance_m")
+    startedAt: DateTime! @rename(attribute: "started_at")
+    durationSec: Int! @rename(attribute: "duration_sec")
+    distanceM: Int! @rename(attribute: "distance_m")
     "Средний темп в секундах на километр. null при нулевой дистанции."
-    avgPaceSecPerKm: Int! @rename(attrubute: "avg_pace_sec_per_km")
+    avgPaceSecPerKm: Int @rename(attribute: "avg_pace_sec_per_km")
     calories: Int
     "Точки трека по порядку. Запрашивать только для одной пробежки, не в списке."
     points: [RunPoint!]! @hasMany
 }
 
+"Точка GPS-трека."
 type RunPoint {
-    id: ID!
     lat: Float!
     lng: Float!
-    recordedAt: DateTime! @rename(attrubute: "recorded_at")
+    recordedAt: DateTime! @rename(attribute: "recorded_at")
 }
 
 enum RunPeriod {
