@@ -1,0 +1,82 @@
+type User {
+    id: ID!
+    name: String!
+    email: String!
+    createdAt: DateTime! @rename(attribute: "created_at")
+}
+
+"Пара токенов и пользователь, которому они выданы."
+type AuthPayload {
+    "Токен для запросов к защищённым полям. Передаётся в заголовке `Authorization: Bearer <token>`."
+    accessToken: String!
+
+    "Токен для получения новой пары через `authTokenRefresh`. В защищённые поля не пускает."
+    refreshToken: String!
+
+    user: User!
+}
+
+extend type Query {
+    "Текущий пользователь."
+    me: User! @guard @auth
+}
+
+extend type Mutation {
+    "Регистрация. Сразу выдаёт пару токенов."
+    authRegister(input: RegisterInput! @spread): AuthPayload!
+        @throttle(maxAttempts: 5, decayMinutes: 1)
+
+    "Вход по email и паролю."
+    authLogin(
+        email: String!
+            @rules(
+                apply: ["required", "email"]
+                messages: [
+                    { rule: "required", message: "Введите email" }
+                    { rule: "email", message: "Некорректный email" }
+                ]
+            )
+        password: String!
+            @rules(
+                apply: ["required"]
+                messages: [
+                    { rule: "required", message: "Введите пароль" }
+                ]
+            )
+    ): AuthPayload! @throttle(maxAttempts: 5, decayMinutes: 1)
+
+    "Новая пара токенов по refresh-токену. Переданный refresh-токен после этого недействителен."
+    authTokenRefresh(refreshToken: String!): AuthPayload!
+
+    "Выход: удаляет текущий access-токен и переданный refresh-токен."
+    authLogout(refreshToken: String!): Boolean! @guard
+}
+
+input RegisterInput {
+    name: String!
+        @rules(
+            apply: ["required", "string", "min:2", "max:50"]
+            messages: [
+                { rule: "required", message: "Введите имя" }
+                { rule: "min", message: "Имя должно содержать минимум 2 символа" }
+                { rule: "max", message: "Имя должно содержать не более 50 символов" }
+            ]
+        )
+    email: String!
+        @rules(
+            apply: ["required", "email", "max:255", "unique:users,email"]
+            messages: [
+                { rule: "required", message: "Введите email" }
+                { rule: "email", message: "Некорректный email" }
+                { rule: "unique", message: "Этот email уже зарегистрирован" }
+            ]
+        )
+    password: String!
+        @rules(
+            apply: ["required", "string", "min:8"]
+            messages: [
+                { rule: "required", message: "Введите пароль" }
+                { rule: "min", message: "Пароль должен содержать минимум 8 символов" }
+            ]
+        )
+}

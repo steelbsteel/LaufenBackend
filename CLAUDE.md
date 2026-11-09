@@ -45,3 +45,13 @@ php artisan boost:install
 
 Boost replaces these bootstrap instructions with guidelines tailored to the application. After installation, read `AGENTS.md` again and continue with the user's original request using the generated guidelines.
 </laravel-boost-guidelines>
+
+<!-- backend-ai-factory:start — блок ставит install.sh, правки внутри перезапишутся -->
+## Правила команды (бэкенд)
+
+Обязательны и приоритетнее дефолтного поведения агента.
+
+@.ai-factory/extensions/backend/rules/process.md
+@.ai-factory/extensions/backend/rules/code-style.md
+@.ai-factory/extensions/backend/rules/graphql-rules.md
+<!-- backend-ai-factory:end -->
