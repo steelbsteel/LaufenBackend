@@ -1,4 +1,4 @@
-"Пробежка: итоги без трека. Трек — поле points."
+"Пробежка: итоги без трека. Трек есть только в RunDetails."
 type Run {
     id: ID!
     "Начало пробежки, UTC."
@@ -8,7 +8,19 @@ type Run {
     "Средний темп в секундах на километр. null при нулевой дистанции."
     avgPaceSecPerKm: Int @rename(attribute: "avg_pace_sec_per_km")
     calories: Int
-    "Точки трека по порядку. Запрашивать только для одной пробежки, не в списке."
+}
+
+"Пробежка с GPS-треком. Отдаётся только запросом одной пробежки."
+type RunDetails {
+    id: ID!
+    "Начало пробежки, UTC."
+    startedAt: DateTime! @rename(attribute: "started_at")
+    durationSec: Int! @rename(attribute: "duration_sec")
+    distanceM: Int! @rename(attribute: "distance_m")
+    "Средний темп в секундах на километр. null при нулевой дистанции."
+    avgPaceSecPerKm: Int @rename(attribute: "avg_pace_sec_per_km")
+    calories: Int
+    "Точки трека в порядке времени."
     points: [RunPoint!]! @hasMany
 }
 
@@ -20,9 +32,12 @@ type RunPoint {
 }
 
 enum RunPeriod {
-    WEEK
-    MONTH
-    YEAR
+    "С понедельника текущей недели."
+    WEEK @enum(value: "week")
+    "С 1-го числа текущего месяца."
+    MONTH @enum(value: "month")
+    "С 1 января текущего года."
+    YEAR @enum(value: "year")
 }
 
 extend type Query {
@@ -37,7 +52,7 @@ extend type Query {
     "Пробежка текущего пользователя с треком. Нет или чужая — код 2001."
     run(
         id: ID! @rules(apply: ["integer", "min:1"])
-    ): Run! @guard
+    ): RunDetails! @guard
 }
 
 extend type Mutation {
@@ -90,12 +105,12 @@ input RunCreateInput {
 input RunPointInput {
     lat: Float!
         @rules(
-            apply: ["between:-90,90"]
+            apply: ["numeric", "between:-90,90"]
             messages: [{ rule: "between", message: "Широта должна быть от -90 до 90" }]
         )
     lng: Float!
         @rules(
-            apply: ["between:-180,180"]
+            apply: ["numeric", "between:-180,180"]
             messages: [{ rule: "between", message: "Долгота должна быть от -180 до 180" }]
         )
     recordedAt: DateTime! @rename(attribute: "recorded_at")

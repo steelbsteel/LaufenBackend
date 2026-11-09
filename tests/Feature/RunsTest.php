@@ -132,6 +132,28 @@ final class RunsTest extends TestCase
         $this->assertCount(4, $response->json('data.all.data'));
     }
 
+    public function test_runs_with_null_period_returns_all_runs(): void
+    {
+        $user = User::factory()->create();
+        Run::factory()->for($user)->create(['started_at' => '2025-12-01 08:00:00']);
+
+        $response = $this->graphQLAs($user, '{ runs(period: null) { data { id } } }');
+
+        $this->assertNull($response->json('errors'));
+        $this->assertCount(1, $response->json('data.runs.data'));
+    }
+
+    public function test_runs_list_does_not_expose_track(): void
+    {
+        $user = User::factory()->create();
+        RunPoint::factory()->for(Run::factory()->for($user))->create();
+
+        $response = $this->graphQLAs($user, '{ runs { data { id points { lat lng } } } }');
+
+        $this->assertStringContainsString('Cannot query field "points"', $response->json('errors.0.message'));
+        $this->assertNull($response->json('data'));
+    }
+
     public function test_runs_paginates_and_limits_page_size(): void
     {
         $user = User::factory()->create();

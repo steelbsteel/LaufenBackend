@@ -17,9 +17,16 @@ final class RunsManager
     /** Допуск по времени точки относительно начала и конца пробежки. */
     private const TRACK_TIME_TOLERANCE_SEC = 60;
 
-    /** Сколько точек вставлять одним запросом: 1000 × 4 колонки = 4000 параметров. */
+    /**
+     * Сколько точек вставлять одним запросом: 1000 × 4 колонки = 4000 параметров.
+     * Весь трек одним insert нельзя: 20 000 точек × 4 = 80 000 > лимита PostgreSQL в 65 535 параметров.
+     */
     private const POINTS_INSERT_CHUNK = 1000;
 
+    /**
+     * @param  array{started_at: CarbonInterface, duration_sec: int, distance_m: int, calories?: int|null}  $data
+     * @param  list<array{lat: float, lng: float, recorded_at: CarbonInterface}>  $points
+     */
     public function create(User $user, array $data, array $points): Run
     {
         $this->assertTrackIsValid($data, $points);
@@ -62,10 +69,6 @@ final class RunsManager
      */
     private function assertTrackIsValid(array $data, array $points): void
     {
-        if (count($points) < 2) {
-            throw new GraphQLException(ErrorCode::RUN_TRACK_INVALID, 'В треке должно быть минимум 2 точки');
-        }
-
         $from = $data['started_at']->copy()->subSeconds(self::TRACK_TIME_TOLERANCE_SEC);
         $to = $data['started_at']->copy()->addSeconds($data['duration_sec'] + self::TRACK_TIME_TOLERANCE_SEC);
 
